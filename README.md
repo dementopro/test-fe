@@ -1,4 +1,10 @@
-# Getting Started with Create React App
+# You can check this video for more understanding
+
+
+https://user-images.githubusercontent.com/1502483/160009532-ff383bbe-3d08-47da-8ac4-3bc60c9c7a42.mp4
+
+
+## Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
