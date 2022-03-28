@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   Table,
@@ -11,13 +11,17 @@ import {
 } from 'antd'
 import { getAllTransactions, updateDatabase } from '../../redux/modules/transaction/actions'
 import { transactionListSelector } from '../../redux/modules/transaction/selectors'
+import { getAllBezosCompanies, setBezosCompanies } from '../../redux/modules/bezos/actions'
+import { bezosCompaniesSelector } from '../../redux/modules/bezos/selectors'
 
 const Transactions = () => {
   const dispatch = useDispatch()
   const transactions = useSelector(transactionListSelector)
+  const bezosCompanies = useSelector(bezosCompaniesSelector)
   const [tableData, setTableData] = useState([])
   const [totalAmount, setTotalAmount] = useState(0)
   const [bezosAmount, setBezosAmount] = useState(0)
+  const [lastInterval, setLastInterval] = useState(0)
 
   const columns = [
     {
@@ -110,11 +114,35 @@ const Transactions = () => {
     }
   ]
 
-  useEffect(() => {
-    setInterval(() => {
-      dispatch(getAllTransactions())
-    }, 10000)
+  const loadData = useCallback(() => {
+    dispatch(getAllBezosCompanies({
+      success: ({ data }: any) => {
+        const bezosRelatedCompanies = data.map((item: any) => item.name)
+        bezosRelatedCompanies.length > 0 && dispatch(getAllTransactions({
+          body: {
+            bezosRelatedCompanies
+          }
+        }))
+      }
+    }))
   }, [dispatch])
+
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  useEffect(() => {
+    const bezosRelatedCompanies = bezosCompanies.map((item: any) => item.name)
+    const interval: any = setInterval(() => {
+      bezosRelatedCompanies.length > 0 && dispatch(getAllTransactions({
+        body: {
+          bezosRelatedCompanies
+        }
+      }))
+    }, 10000)
+
+    setLastInterval(interval)
+  }, [dispatch, bezosCompanies])
 
   useEffect(() => {
     setTableData(transactions.map((item: any, index: any) => {
@@ -126,12 +154,29 @@ const Transactions = () => {
   }, [transactions])
 
   const handleChange = (record: any) => () => {
+    let copyCompanies = bezosCompanies.map((item: any) => item.name)
+    const currentIndex = copyCompanies.findIndex((item: any) => item === record.merchant_name)
+
+    if (currentIndex > -1) {
+      copyCompanies.splice(currentIndex, 1)
+    } else {
+      copyCompanies.push(record.merchant_name)
+    }
+
+    dispatch(setBezosCompanies({
+      body: {
+        bezosCompanies: copyCompanies
+      }
+    }))
+
     setTableData((prev: any) => prev.map((item: any) => {
       return {
         ...item,
         is_selected: record.merchant_name === item.merchant_name ? !item.is_selected : item.is_selected
       }
     }))
+    clearInterval(lastInterval)
+    setLastInterval(0)
   }
 
   useEffect(() => {
@@ -148,7 +193,7 @@ const Transactions = () => {
     tableData.length > 0 && dispatch(updateDatabase({
       body: tableData
     }))
-  }, [tableData])
+  }, [dispatch, tableData])
 
   return (
     <Space direction="vertical" style={{ width: '100%' }}>

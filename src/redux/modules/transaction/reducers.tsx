@@ -5,7 +5,7 @@ import * as CONSTANTS from './constants'
 const initialState = () => {
   return {
     transactions: [],
-    status: 'INIT'
+    status: 'INIT',
   }
 }
 

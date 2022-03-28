@@ -4,14 +4,14 @@ import apiCall from '../api/apiCall'
 
 const getList = apiCall({
   type: CONSTANTS.GET_ALL_TRANSACTIONS,
-  method: 'get',
+  method: 'post',
   path: 'transactions'
 })
 
 const doUpdateDatabase = apiCall({
   type: CONSTANTS.UPDATE_DATABASE,
   method: 'post',
-  path: 'transactions'
+  path: 'transactions/update'
 })
 
 export default function* rootSaga () {
